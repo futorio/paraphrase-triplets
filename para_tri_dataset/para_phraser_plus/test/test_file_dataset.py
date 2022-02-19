@@ -1,12 +1,9 @@
+import logging
 from pathlib import Path
 
 import pytest
 
-from para_tri_dataset.para_phraser_plus.file_dataset import (
-    ParaPhraserPlusFileDataset,
-    ParaPhraserPlusRecord,
-    ParaPhraserPlusPhrase,
-)
+from para_tri_dataset.para_phraser_plus.file_dataset import ParaPhraserPlusFileDataset, ParaPhraserPlusPhrase
 
 
 @pytest.fixture
@@ -26,35 +23,23 @@ def json_dataset_filepath(datadir) -> str:
 
 
 @pytest.fixture
-def all_phrases():
-    return ParaPhraserPlusPhrase(0, 0, "foo"), ParaPhraserPlusPhrase(0, 1, "baz"), ParaPhraserPlusPhrase(1, 1, "bar")
+def phrase_a():
+    return ParaPhraserPlusPhrase(0, (1,), "foo")
 
 
 @pytest.fixture
-def paraphrase_a():
-    return ParaPhraserPlusPhrase(0, 1, "baz")
+def phrase_b():
+    return ParaPhraserPlusPhrase(1, (0,), "baz")
 
 
 @pytest.fixture
-def paraphrase_b():
-    return ParaPhraserPlusPhrase(1, 1, "bar")
-
-
-@pytest.fixture
-def dataset() -> ParaPhraserPlusFileDataset:
-    records = (
-        ParaPhraserPlusRecord(0, "", "", (ParaPhraserPlusPhrase(0, 0, "foo"),)),
-        ParaPhraserPlusRecord(
-            1,
-            "",
-            "",
-            (
-                ParaPhraserPlusPhrase(0, 1, "baz"),
-                ParaPhraserPlusPhrase(1, 1, "bar"),
-            ),
-        ),
+def dataset(phrase_a, phrase_b) -> ParaPhraserPlusFileDataset:
+    return ParaPhraserPlusFileDataset(
+        (
+            phrase_a,
+            phrase_b,
+        )
     )
-    return ParaPhraserPlusFileDataset(records)
 
 
 def test_dataset_zip_load(zip_dataset_filepath: str, json_dataset_filepath: str):
@@ -77,13 +62,29 @@ def test_dataset_json_load(zip_dataset_filepath: str, json_dataset_filepath: str
     _ = ParaPhraserPlusFileDataset.from_json(json_dataset_filepath)
 
 
-def test_iterate_phrases(dataset: ParaPhraserPlusFileDataset, all_phrases):
+def test_iterate_phrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
     phrases = tuple(dataset.iterate_phrases())
-    assert all_phrases == phrases
+    assert phrases == (
+        phrase_a,
+        phrase_b,
+    )
+
+    assert next(dataset.iterate_phrases(offset=1)) == phrase_b
 
 
-def test_get_paraphrases(dataset: ParaPhraserPlusFileDataset, paraphrase_a, paraphrase_b):
-    paraphrases = dataset.get_paraphrases(paraphrase_a)
+def test_get_paraphrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    paraphrases_a = dataset.get_paraphrases(phrase_a)
+    assert len(paraphrases_a) == 1
+    assert paraphrases_a[0] == phrase_b
 
-    assert len(paraphrases) == 1
-    assert paraphrases[0] == paraphrase_b
+    paraphrases_b = dataset.get_paraphrases(phrase_b)
+    assert len(paraphrases_b) == 1
+    assert paraphrases_b[0] == phrase_a
+
+
+def test_get_phrase_by_idx(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    assert phrase_a == dataset.get_phrase_by_id(0)
+    assert phrase_b == dataset.get_phrase_by_id(1)
+
+    with pytest.raises(ValueError):
+        dataset.get_phrase_by_id(2)

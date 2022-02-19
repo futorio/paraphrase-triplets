@@ -20,27 +20,29 @@ SerializedDatasetType = Dict[str, SerializedRecordType]
 
 @dataclass
 class ParaPhraserPlusPhrase:
-    id: int  # id не уникальный!
-    record_id: int
+    id: int
+    paraphrases_ids: Tuple[int, ...]
+
     text: str
 
 
-@dataclass
-class ParaPhraserPlusRecord:
-    id: int
-    rubric: str
-    date: str
-    phrases: Tuple[ParaPhraserPlusPhrase, ...]
-
-    @classmethod
-    def from_dict(cls, id_: int, d: SerializedRecordType) -> "ParaPhraserPlusRecord":
-        phrases = tuple(ParaPhraserPlusPhrase(phrase_id, id_, text) for phrase_id, text in enumerate(d["headlines"]))
-        return cls(id_, d["rubric"], d["date"], phrases)
-
-
 class ParaPhraserPlusFileDataset:
-    def __init__(self, records: Tuple[ParaPhraserPlusRecord, ...]):
-        self.records = records
+    def __init__(self, phrases: Tuple[ParaPhraserPlusPhrase, ...]):
+        self.phrases = phrases
+
+    @staticmethod
+    def parse_json_dataset(dataset: SerializedDatasetType) -> Generator[ParaPhraserPlusPhrase, None, None]:
+        offset = 0
+        for serialized_record in dataset.values():
+            phrases_count = len(serialized_record["headlines"])
+
+            for i, text in enumerate(serialized_record["headlines"]):
+                phrase_id = offset + i
+                paraphrases_ids = tuple(offset + j for j in range(phrases_count) if j != i)
+
+                yield ParaPhraserPlusPhrase(phrase_id, paraphrases_ids, text)
+
+            offset += phrases_count
 
     @classmethod
     def from_zip(cls, filepath: str) -> "ParaPhraserPlusFileDataset":
@@ -59,8 +61,8 @@ class ParaPhraserPlusFileDataset:
             with zf.open("ParaPhraserPlus/ParaPhraserPlus.json", "r") as f:
                 dataset: SerializedDatasetType = json.load(f)
 
-        records = tuple(ParaPhraserPlusRecord.from_dict(int(k), v) for k, v in dataset.items())
-        return cls(records)
+        phrases = tuple(cls.parse_json_dataset(dataset))
+        return cls(phrases)
 
     @classmethod
     def from_json(cls, filepath: str) -> "ParaPhraserPlusFileDataset":
@@ -73,14 +75,18 @@ class ParaPhraserPlusFileDataset:
         except json.JSONDecodeError:
             raise ValueError(f"file {filepath} is not a json")
 
-        records = tuple(ParaPhraserPlusRecord.from_dict(int(k), v) for k, v in dataset.items())
-        return cls(records)
+        phrases = tuple(cls.parse_json_dataset(dataset))
+        return cls(phrases)
 
-    def iterate_phrases(self) -> Generator[ParaPhraserPlusPhrase, None, None]:
-        for record in self.records:
-            yield from record.phrases
+    def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
+        yield from self.phrases[offset:]
+
+    def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
+        try:
+            return self.phrases[phrase_id]
+        except IndexError:
+            raise ValueError(f"not found phrase by id {phrase_id}")
 
     def get_paraphrases(self, phrase: ParaPhraserPlusPhrase) -> Tuple[ParaPhraserPlusPhrase, ...]:
         """Возвращает список фраз, которые являются парафразами данного"""
-        record: ParaPhraserPlusRecord = self.records[phrase.record_id]
-        return tuple(p for p in record.phrases if p.id != phrase.id)
+        return tuple(self.phrases[p_id] for p_id in phrase.paraphrases_ids)
