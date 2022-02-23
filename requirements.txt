@@ -4,3 +4,5 @@ setuptools==57.0.0
 transformers==4.16.2
 numpy==1.22.2
 torch==1.10.2
+hydra-core==1.1.1
+omegaconf==2.1.1

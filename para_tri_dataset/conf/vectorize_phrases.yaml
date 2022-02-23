@@ -1,0 +1,5 @@
+batch_size: 64
+defaults:
+  - _self_
+  - dataset: paraphrase_plus_file
+  - vector_model: sbert_large_mt_nlu_ru

@@ -8,6 +8,8 @@ import zipfile
 from dataclasses import dataclass
 from typing import Tuple, TypedDict, List, Dict, Generator
 
+from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
+
 
 class SerializedRecordType(TypedDict):
     rubric: str
@@ -19,16 +21,20 @@ SerializedDatasetType = Dict[str, SerializedRecordType]
 
 
 @dataclass
-class ParaPhraserPlusPhrase:
+class ParaPhraserPlusPhrase(Phrase):
     id: int
-    paraphrases_ids: Tuple[int, ...]
-
     text: str
 
+    paraphrases_ids: Tuple[int, ...]
 
-class ParaPhraserPlusFileDataset:
+
+class ParaPhraserPlusFileDataset(ParaphraseDataset):
     def __init__(self, phrases: Tuple[ParaPhraserPlusPhrase, ...]):
         self.phrases = phrases
+
+    @staticmethod
+    def get_name() -> str:
+        return "paraphrase_plus_file"
 
     @staticmethod
     def parse_json_dataset(dataset: SerializedDatasetType) -> Generator[ParaPhraserPlusPhrase, None, None]:
@@ -40,9 +46,32 @@ class ParaPhraserPlusFileDataset:
                 phrase_id = offset + i
                 paraphrases_ids = tuple(offset + j for j in range(phrases_count) if j != i)
 
-                yield ParaPhraserPlusPhrase(phrase_id, paraphrases_ids, text)
+                yield ParaPhraserPlusPhrase(phrase_id, text, paraphrases_ids)
 
             offset += phrases_count
+
+    @classmethod
+    def from_config(cls, cfg):
+        try:
+            name = cfg['name']
+        except KeyError:
+            raise ValueError('config has not "name" attribute')
+
+        dataset_name = cls.get_name()
+        if dataset_name != name:
+            msg = f'config dataset name "{name}" does not compare with dataset class name "{dataset_name}"'
+            raise ValueError(msg)
+
+        zip_filepath, json_filepath = cfg.get('zip_filepath'), cfg.get('json_filepath')
+        if zip_filepath is None and json_filepath is None:
+            raise ValueError(f'config does not contain zip_filepath or json_filepath')
+        elif zip_filepath is not None and json_filepath is not None:
+            raise ValueError(f'config must contain zip_filepath or json_filepath not both')
+
+        elif zip_filepath is not None:
+            return cls.from_zip(zip_filepath)
+        else:
+            return cls.from_json(json_filepath)
 
     @classmethod
     def from_zip(cls, filepath: str) -> "ParaPhraserPlusFileDataset":

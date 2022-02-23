@@ -1,9 +1,8 @@
-import logging
 from pathlib import Path
 
 import pytest
 
-from para_tri_dataset.para_phraser_plus.file_dataset import ParaPhraserPlusFileDataset, ParaPhraserPlusPhrase
+from para_tri_dataset.paraphrase_dataset.para_phraser_plus.file_dataset import ParaPhraserPlusFileDataset, ParaPhraserPlusPhrase
 
 
 @pytest.fixture
@@ -24,12 +23,12 @@ def json_dataset_filepath(datadir) -> str:
 
 @pytest.fixture
 def phrase_a():
-    return ParaPhraserPlusPhrase(0, (1,), "foo")
+    return ParaPhraserPlusPhrase(0, "foo", (1,))
 
 
 @pytest.fixture
 def phrase_b():
-    return ParaPhraserPlusPhrase(1, (0,), "baz")
+    return ParaPhraserPlusPhrase(1, "baz", (0,))
 
 
 @pytest.fixture

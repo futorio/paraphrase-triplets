@@ -2,29 +2,21 @@
 Скрип для перевода фраз в векторное представление
 """
 
-# TODO: реализовать скрипт с конфигами Hydra
-# TODO: способ конфигурации датасета
 # TODO: чекпоинтинг
+import hydra
+from omegaconf import DictConfig
 
-import argparse
+from para_tri_dataset.paraphrase_dataset import get_dataset_from_config
+from para_tri_dataset.phrase_vector_model import get_vector_model_from_config
 
 
-def main():
-    arg_parser = argparse.ArgumentParser(description='получение векторов фраз')
+@hydra.main(config_path="conf", config_name="vectorize_phrases")
+def main(cfg: DictConfig):
+    dataset = get_dataset_from_config(cfg['dataset'])
+    phrase_model = get_vector_model_from_config(cfg['vector_model'])
 
-    dataset_group = arg_parser.add_argument_group(title='dataset')
-    dataset_group.add_argument('--dataset-type', choices=['ParaPhraserPlus'], required=True)
-
-    dataset_path_group = dataset_group.add_mutually_exclusive_group(required=True)
-    dataset_path_group.add_argument('--zip-filepath', type=str)
-    dataset_path_group.add_argument('--json-filepath', type=str)
-
-    phrase_vector_group = arg_parser.add_argument_group(title='phrase vector')
-    phrase_vector_group.add_argument('--model-type', type=str, choices=['sbert_large_mt_nlu_ru'], required=True)
-    phrase_vector_group.add_argument('--model-path', type=str)
-
-    args = arg_parser.parse_args()
-    print(args)
+    print(dataset)
+    print(phrase_model)
 
 
 if __name__ == '__main__':
