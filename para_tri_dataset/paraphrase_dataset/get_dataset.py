@@ -8,15 +8,12 @@ from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset
 
 DATASETS = [ParaPhraserPlusFileDataset]
 
-DATASET_NAMES_MAPPING: Dict[str, ParaphraseDataset] = {
-    dataset_cls.get_name(): dataset_cls
-    for dataset_cls in DATASETS
-}
+DATASET_NAMES_MAPPING: Dict[str, ParaphraseDataset] = {dataset_cls.get_name(): dataset_cls for dataset_cls in DATASETS}
 
 
 def get_dataset_from_config(cfg):
     try:
-        dataset_name = cfg['name']
+        dataset_name = cfg["name"]
     except KeyError:
         raise ValueError(f'config has not attribute "name"')
 

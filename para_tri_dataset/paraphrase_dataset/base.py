@@ -8,9 +8,9 @@ from typing import Any, Generator, Dict, Sequence
 
 @dataclass
 class AbstractDataclass(abc.ABC):
-    def __new__(cls, *args, **kwargs): 
-        if cls == AbstractDataclass or cls.__bases__[0] == AbstractDataclass: 
-            raise TypeError("Cannot instantiate abstract class.") 
+    def __new__(cls, *args, **kwargs):
+        if cls == AbstractDataclass or cls.__bases__[0] == AbstractDataclass:
+            raise TypeError("Cannot instantiate abstract class.")
         return super().__new__(cls)
 
 
@@ -21,7 +21,6 @@ class Phrase(AbstractDataclass):
 
 
 class ParaphraseDataset(abc.ABC):
-
     @staticmethod
     @abc.abstractmethod
     def get_name() -> str:
@@ -29,7 +28,7 @@ class ParaphraseDataset(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_config(cls, cfg: Dict[str, Any]) -> 'ParaphraseDataset':
+    def from_config(cls, cfg: Dict[str, Any]) -> "ParaphraseDataset":
         pass
 
     @abc.abstractmethod

@@ -8,15 +8,12 @@ from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel
 
 VECTOR_MODELS = [SbertLargeMTNLU]
 
-MODELS_NAMES_MAPPING: Dict[str, PhraseVectorModel] = {
-    model_cls.get_name(): model_cls
-    for model_cls in VECTOR_MODELS
-}
+MODELS_NAMES_MAPPING: Dict[str, PhraseVectorModel] = {model_cls.get_name(): model_cls for model_cls in VECTOR_MODELS}
 
 
 def get_vector_model_from_config(cfg):
     try:
-        model_name = cfg['name']
+        model_name = cfg["name"]
     except KeyError:
         raise ValueError(f'config has not attribute "name"')
 

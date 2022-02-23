@@ -27,7 +27,7 @@ class SbertLargeMTNLU(PhraseVectorModel):
     Пачка текстов приводится к максимальной длине, отсечением токенов и паддингом
     """
 
-    HF_URL = 'sberbank-ai/sbert_large_mt_nlu_ru'
+    HF_URL = "sberbank-ai/sbert_large_mt_nlu_ru"
 
     def __init__(self, model, tokenizer, device: torch.device, seq_len: int = 24):
         self.device = device
@@ -39,14 +39,14 @@ class SbertLargeMTNLU(PhraseVectorModel):
 
     @staticmethod
     def get_name() -> str:
-        return 'sbert_large_mt_nlu_ru'
+        return "sbert_large_mt_nlu_ru"
 
     @classmethod
-    def from_config(cls, cfg: Dict[str, Any]) -> 'SbertLargeMTNLU':
+    def from_config(cls, cfg: Dict[str, Any]) -> "SbertLargeMTNLU":
         # TODO: просто скопировал это из ParaPhraserPlusFileDataset.from_config нужно вынести этот код
 
         try:
-            name = cfg['name']
+            name = cfg["name"]
         except KeyError:
             raise ValueError('config has not "name" attribute')
 
@@ -55,17 +55,17 @@ class SbertLargeMTNLU(PhraseVectorModel):
             msg = f'config dataset name "{name}" does not compare with dataset class name "{dataset_name}"'
             raise ValueError(msg)
 
-        model_path = cfg.get('path')
+        model_path = cfg.get("path")
 
         try:
-            seq_len = cfg['seq_len']
+            seq_len = cfg["seq_len"]
         except KeyError:
-            raise ValueError(f'config has not attribute seq_len')
+            raise ValueError(f"config has not attribute seq_len")
 
         try:
-            device_name = cfg['device']
+            device_name = cfg["device"]
         except KeyError:
-            raise ValueError(f'config has not attribute device')
+            raise ValueError(f"config has not attribute device")
 
         device = torch.device(device_name)
 
@@ -79,7 +79,7 @@ class SbertLargeMTNLU(PhraseVectorModel):
         return cls(model, tokenizer, device, seq_len)
 
     @classmethod
-    def load(cls, model_path: Optional[str], device: torch.device, seq_len: int = 24) -> 'SbertLargeMTNLU':
+    def load(cls, model_path: Optional[str], device: torch.device, seq_len: int = 24) -> "SbertLargeMTNLU":
         if model_path is None:
             path = cls.HF_URL
         else:
@@ -94,10 +94,11 @@ class SbertLargeMTNLU(PhraseVectorModel):
         return self.model.config.hidden_size
 
     def create_sentences_vectors(self, sentences: List[str]) -> np.array:
-        tokenized = self.tokenizer(sentences, max_length=self.seq_len, padding=True, truncation=True,
-                                   return_tensors='pt').to(self.device)
+        tokenized = self.tokenizer(
+            sentences, max_length=self.seq_len, padding=True, truncation=True, return_tensors="pt"
+        ).to(self.device)
 
         with torch.no_grad():
             output = self.model(**tokenized)
 
-        return mean_pooling(output, tokenized['attention_mask']).cpu().numpy()
+        return mean_pooling(output, tokenized["attention_mask"]).cpu().numpy()

@@ -53,7 +53,7 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
     @classmethod
     def from_config(cls, cfg):
         try:
-            name = cfg['name']
+            name = cfg["name"]
         except KeyError:
             raise ValueError('config has not "name" attribute')
 
@@ -62,11 +62,11 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
             msg = f'config dataset name "{name}" does not compare with dataset class name "{dataset_name}"'
             raise ValueError(msg)
 
-        zip_filepath, json_filepath = cfg.get('zip_filepath'), cfg.get('json_filepath')
+        zip_filepath, json_filepath = cfg.get("zip_filepath"), cfg.get("json_filepath")
         if zip_filepath is None and json_filepath is None:
-            raise ValueError(f'config does not contain zip_filepath or json_filepath')
+            raise ValueError(f"config does not contain zip_filepath or json_filepath")
         elif zip_filepath is not None and json_filepath is not None:
-            raise ValueError(f'config must contain zip_filepath or json_filepath not both')
+            raise ValueError(f"config must contain zip_filepath or json_filepath not both")
 
         elif zip_filepath is not None:
             return cls.from_zip(zip_filepath)
