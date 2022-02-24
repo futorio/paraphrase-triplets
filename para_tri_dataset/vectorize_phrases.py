@@ -34,7 +34,7 @@ def iterable_chunk(seq, size: int):
 
 @hydra.main(config_path="conf", config_name="vectorize_phrases")
 def main(cfg: DictConfig):
-    verbose = cfg.get('verbose', 0)
+    verbose = cfg.get("verbose", 0)
     if verbose > 0:
         level = logging.DEBUG
     else:
@@ -42,24 +42,24 @@ def main(cfg: DictConfig):
 
     logger.setLevel(level)
 
-    logger.debug('load dataset')
+    logger.debug("load dataset")
     dataset = get_dataset_from_config(cfg["dataset"])
     logger.debug('done. Dataset name: "%s"', dataset.get_name())
 
-    logger.debug('load phrase vector model')
+    logger.debug("load phrase vector model")
     phrase_model = get_vector_model_from_config(cfg["vector_model"])
     logger.debug('done. Vector model name: "%s"', phrase_model.get_name())
 
-    logger.debug('start vectorize phrases')
+    logger.debug("start vectorize phrases")
 
-    output_path = Path(cfg.get('output_path', '.'))
-    phrase_matrix_filename = f'd:{dataset.get_name()}:m:{phrase_model.get_name()}.npz'
+    output_path = Path(cfg.get("output_path", "."))
+    phrase_matrix_filename = f"d:{dataset.get_name()}:m:{phrase_model.get_name()}.npz"
 
     phrase_matrix_filepath = output_path / phrase_matrix_filename
     if phrase_matrix_filepath.exists():
-        raise ValueError(f'phrase matrix {phrase_matrix_filepath} already exists')
+        raise ValueError(f"phrase matrix {phrase_matrix_filepath} already exists")
 
-    chunks = iterable_chunk(dataset.iterate_phrases(), cfg['batch_size'])
+    chunks = iterable_chunk(dataset.iterate_phrases(), cfg["batch_size"])
 
     pbar = tqdm(total=dataset.size())
     phrase_matrix = phrase_model.create_phrases_vectors(next(chunks))
@@ -73,7 +73,7 @@ def main(cfg: DictConfig):
     pbar.close()
 
     np.savez_compressed(str(phrase_matrix_filepath), phrase_matrix)
-    logger.debug('done matrix saved to %s', phrase_matrix_filepath)
+    logger.debug("done matrix saved to %s", phrase_matrix_filepath)
 
 
 if __name__ == "__main__":
