@@ -1,2 +1,3 @@
 name: paraphrase_plus_file
-json_filepath: /home/futorio/storage/datasets/para_phraser/ParaPhraserPlus/ParaPhraserPlus.json
+# json_filepath: .
+# zip_filepath: .

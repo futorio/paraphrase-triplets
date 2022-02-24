@@ -26,6 +26,10 @@ class ParaphraseDataset(abc.ABC):
     def get_name() -> str:
         pass
 
+    @abc.abstractmethod
+    def size(self) -> int:
+        pass
+
     @classmethod
     @abc.abstractmethod
     def from_config(cls, cfg: Dict[str, Any]) -> "ParaphraseDataset":

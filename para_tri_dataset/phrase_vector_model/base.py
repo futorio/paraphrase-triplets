@@ -3,6 +3,8 @@ from typing import Sequence, Any, Dict
 
 import numpy as np
 
+from para_tri_dataset.paraphrase_dataset.base import Phrase
+
 
 class PhraseVectorModel(abc.ABC):
     @staticmethod
@@ -20,5 +22,5 @@ class PhraseVectorModel(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def create_sentences_vectors(self, sentences: Sequence[str]) -> np.array:
+    def create_phrases_vectors(self, phrases: Sequence[Phrase]) -> np.array:
         pass

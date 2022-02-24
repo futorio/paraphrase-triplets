@@ -6,7 +6,7 @@ import json
 import os
 import zipfile
 from dataclasses import dataclass
-from typing import Tuple, TypedDict, List, Dict, Generator
+from typing import Tuple, TypedDict, List, Dict, Generator, Optional
 
 from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
 
@@ -35,6 +35,9 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
     @staticmethod
     def get_name() -> str:
         return "paraphrase_plus_file"
+
+    def size(self) -> int:
+        return len(self.phrases)
 
     @staticmethod
     def parse_json_dataset(dataset: SerializedDatasetType) -> Generator[ParaPhraserPlusPhrase, None, None]:

@@ -1,4 +1,4 @@
 name: sbert_large_mt_nlu_ru
-path: /home/futorio/storage/models/sberbank-ai/sbert_large_mt_nlu_ru
+# path: /home/futorio/storage/models/sberbank-ai/sbert_large_mt_nlu_ru
 seq_len: 24
 device: cpu

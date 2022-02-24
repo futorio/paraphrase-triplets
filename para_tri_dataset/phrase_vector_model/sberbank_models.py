@@ -6,6 +6,7 @@ import numpy as np
 from transformers import AutoTokenizer, AutoModel
 import torch
 
+from para_tri_dataset.paraphrase_dataset.base import Phrase
 from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel
 
 
@@ -93,9 +94,10 @@ class SbertLargeMTNLU(PhraseVectorModel):
     def get_vector_size(self) -> int:
         return self.model.config.hidden_size
 
-    def create_sentences_vectors(self, sentences: List[str]) -> np.array:
+    def create_phrases_vectors(self, phrases: List[Phrase]) -> np.array:
+        texts = [p.text for p in phrases]
         tokenized = self.tokenizer(
-            sentences, max_length=self.seq_len, padding=True, truncation=True, return_tensors="pt"
+            texts, max_length=self.seq_len, padding=True, truncation=True, return_tensors="pt"
         ).to(self.device)
 
         with torch.no_grad():

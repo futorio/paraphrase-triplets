@@ -1,4 +1,6 @@
 batch_size: 64
+verbose: 1
+# output_path: .
 defaults:
   - _self_
   - dataset: paraphrase_plus_file
