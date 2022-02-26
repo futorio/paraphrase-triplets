@@ -2,12 +2,14 @@
 
 from typing import Optional, List, Dict, Any
 
-import numpy as np
 from transformers import AutoTokenizer, AutoModel
 import torch
 
 from para_tri_dataset.paraphrase_dataset.base import Phrase
-from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel
+from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel, PhraseNumpyVector
+
+
+DEFAULT_DEVICE = torch.device('cpu')
 
 
 # Mean Pooling - Take attention mask into account for correct averaging
@@ -30,9 +32,7 @@ class SbertLargeMTNLU(PhraseVectorModel):
 
     HF_URL = "sberbank-ai/sbert_large_mt_nlu_ru"
 
-    def __init__(self, model, tokenizer, device: torch.device, seq_len: int = 24):
-        self.device = device
-
+    def __init__(self, model, tokenizer, seq_len: int = 24):
         self.model = model
         self.tokenizer = tokenizer
 
@@ -63,44 +63,47 @@ class SbertLargeMTNLU(PhraseVectorModel):
         except KeyError:
             raise ValueError(f"config has not attribute seq_len")
 
-        try:
-            device_name = cfg["device"]
-        except KeyError:
-            raise ValueError(f"config has not attribute device")
-
-        device = torch.device(device_name)
-
         if model_path is None:
             path = cls.HF_URL
         else:
             path = model_path
 
-        model = AutoModel.from_pretrained(path).to(device)
-        tokenizer = AutoTokenizer.from_pretrained(path)
-        return cls(model, tokenizer, device, seq_len)
+        return cls.load(path, seq_len)
 
     @classmethod
-    def load(cls, model_path: Optional[str], device: torch.device, seq_len: int = 24) -> "SbertLargeMTNLU":
+    def load(cls, model_path: Optional[str], seq_len: int = 24) -> "SbertLargeMTNLU":
         if model_path is None:
             path = cls.HF_URL
         else:
             path = model_path
 
-        model = AutoModel.from_pretrained(path).to(device)
-        tokenizer = AutoTokenizer.from_pretrained(path)
+        model = AutoModel.from_pretrained(path)
+        model.eval()
 
-        return cls(model, tokenizer, device, seq_len)
+        tokenizer = AutoTokenizer.from_pretrained(path)
+        return cls(model, tokenizer, seq_len)
+
+    def to_device(self, device: torch.device):
+        self.model.to(device)
 
     def get_vector_size(self) -> int:
         return self.model.config.hidden_size
 
-    def create_phrases_vectors(self, phrases: List[Phrase]) -> np.array:
+    def create_phrases_vectors(self, phrases: List[Phrase],
+                               device: torch.device = DEFAULT_DEVICE) -> List[PhraseNumpyVector]:
+
         texts = [p.text for p in phrases]
         tokenized = self.tokenizer(
             texts, max_length=self.seq_len, padding=True, truncation=True, return_tensors="pt"
-        ).to(self.device)
+        ).to(device)
 
         with torch.no_grad():
             output = self.model(**tokenized)
 
-        return mean_pooling(output, tokenized["attention_mask"]).cpu().numpy()
+        matrix = mean_pooling(output, tokenized["attention_mask"]).cpu().numpy()
+
+        phrases_vectors = []
+        for phrase, vector in zip(phrases, matrix):
+            phrases_vectors.append(PhraseNumpyVector(phrase.id, vector))
+
+        return phrases_vectors

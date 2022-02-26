@@ -1,0 +1,2 @@
+# output_path: datasets/para_phraser/ParaPhraserPlus/vectorize_phrases
+checkpoint_every: 128

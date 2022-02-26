@@ -1,7 +1,8 @@
 batch_size: 64
+device: cpu
 verbose: 1
-# output_path: .
 defaults:
   - _self_
+  - vector_storage: file_vector_storage
   - dataset: paraphrase_plus_file
   - vector_model: sbert_large_mt_nlu_ru

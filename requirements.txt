@@ -7,3 +7,4 @@ torch==1.10.2
 hydra-core==1.1.1
 omegaconf==2.1.1
 tqdm==4.62.3
+SQLAlchemy==1.4.31
