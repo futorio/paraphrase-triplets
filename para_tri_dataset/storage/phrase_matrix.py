@@ -32,10 +32,10 @@ class PhrasesVectorsStorageMetadata:
 
     dataset_name: str
 
-    def create_phrase_matrix_filename(self, total_vectors_count, matrix_size) -> str:
+    def create_phrase_matrix_name(self, total_vectors_count, matrix_size) -> str:
         start, end = total_vectors_count, total_vectors_count + matrix_size - 1
 
-        tmpl = '({vector_model})({dim})({dataset_name}){start}...{end}.npz'
+        tmpl = '({vector_model})({dim})({dataset_name}){start}...{end}'
         return tmpl.format(vector_model=self.vector_model_name, dim=self.phrase_vector_dim,
                            dataset_name=self.dataset_name, start=start, end=end)
 
@@ -102,15 +102,14 @@ class PhrasesVectorsDiskStorage:
         with self.storage_database.session_scope() as session:
             total_vector_count = self._get_vector_count(session)
 
-        matrix_filename = self.metadata.create_phrase_matrix_filename(total_vector_count,
-                                                                      len(self.phrase_vectors_buffer))
-
+        matrix_name = self.metadata.create_phrase_matrix_name(total_vector_count, len(self.phrase_vectors_buffer))
+        matrix_filename = f'{matrix_name}.npy'
         tmp_matrix_filepath = self.base_path / ('tmp' + matrix_filename)
         matrix_filepath = self.base_path / matrix_filename
 
         phrase_matrix = np.vstack(tuple(p.body for p in self.phrase_vectors_buffer))
 
-        np.savez_compressed(str(tmp_matrix_filepath), phrase_matrix)
+        np.save(str(tmp_matrix_filepath), phrase_matrix)
         with self.storage_database.session_scope() as session:
             try:
                 ids = [pv.id for pv in self.phrase_vectors_buffer]
