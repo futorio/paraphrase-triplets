@@ -6,13 +6,13 @@ import json
 import os
 import zipfile
 from dataclasses import dataclass
-from typing import Tuple, TypedDict, List, Dict, Generator, Any, Sequence
+from typing import Tuple, List, Dict, Generator, Any, Sequence
 
 from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
 from para_tri_dataset.config import Config
 
 
-class SerializedRecordType(TypedDict):
+class SerializedRecordType:
     rubric: str
     date: str
     headlines: List[str]

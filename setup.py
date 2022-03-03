@@ -16,6 +16,7 @@ setup(
     description="Create triplet dataset from paraphrase with ANN negative sampling",
     packages=find_packages(),
     install_requires=get_requirements(),
+    python_requires="<=3.7.*",
     entry_points={
         "console_scripts": ["vectorize-phrases=para_tri_dataset.vectorize_phrases:main"]
     }
