@@ -9,7 +9,7 @@ from para_tri_dataset.paraphrase_dataset.base import Phrase
 from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel, PhraseNumpyVector
 
 
-DEFAULT_DEVICE = torch.device('cpu')
+DEFAULT_DEVICE = torch.device("cpu")
 
 
 # Mean Pooling - Take attention mask into account for correct averaging
@@ -89,8 +89,9 @@ class SbertLargeMTNLU(PhraseVectorModel):
     def get_vector_size(self) -> int:
         return self.model.config.hidden_size
 
-    def create_phrases_vectors(self, phrases: List[Phrase],
-                               device: torch.device = DEFAULT_DEVICE) -> List[PhraseNumpyVector]:
+    def create_phrases_vectors(
+        self, phrases: List[Phrase], device: torch.device = DEFAULT_DEVICE
+    ) -> List[PhraseNumpyVector]:
 
         texts = [p.text for p in phrases]
         tokenized = self.tokenizer(

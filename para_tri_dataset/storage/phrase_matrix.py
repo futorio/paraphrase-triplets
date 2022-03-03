@@ -35,18 +35,25 @@ class PhrasesVectorsStorageMetadata:
     def create_phrase_matrix_name(self, total_vectors_count, matrix_size) -> str:
         start, end = total_vectors_count, total_vectors_count + matrix_size - 1
 
-        tmpl = '({vector_model})({dim})({dataset_name}){start}...{end}'
-        return tmpl.format(vector_model=self.vector_model_name, dim=self.phrase_vector_dim,
-                           dataset_name=self.dataset_name, start=start, end=end)
+        tmpl = "({vector_model})({dim})({dataset_name}){start}...{end}"
+        return tmpl.format(
+            vector_model=self.vector_model_name,
+            dim=self.phrase_vector_dim,
+            dataset_name=self.dataset_name,
+            start=start,
+            end=end,
+        )
 
     def to_dict(self):
-        return {'vector_model': {'name': self.vector_model_name, 'dim': self.phrase_vector_dim},
-                'dataset': {'name': self.dataset_name}}
+        return {
+            "vector_model": {"name": self.vector_model_name, "dim": self.phrase_vector_dim},
+            "dataset": {"name": self.dataset_name},
+        }
 
     @classmethod
-    def from_dict(cls, d) -> 'PhrasesVectorsStorageMetadata':
-        vm_cfg = d['vector_model']
-        return cls(vm_cfg['name'], vm_cfg['dim'], d['dataset']['name'])
+    def from_dict(cls, d) -> "PhrasesVectorsStorageMetadata":
+        vm_cfg = d["vector_model"]
+        return cls(vm_cfg["name"], vm_cfg["dim"], d["dataset"]["name"])
 
 
 class PhrasesVectorsDiskStorage:
@@ -54,8 +61,14 @@ class PhrasesVectorsDiskStorage:
     Хранение векторов фраз на диске в виде .npz файлов.
 
     """
-    def __init__(self, base_path: Path, metadata: PhrasesVectorsStorageMetadata, storage_database: Database,
-                 checkpoint_every: int):
+
+    def __init__(
+        self,
+        base_path: Path,
+        metadata: PhrasesVectorsStorageMetadata,
+        storage_database: Database,
+        checkpoint_every: int,
+    ):
 
         self.base_path = base_path
         self.metadata = metadata
@@ -85,9 +98,12 @@ class PhrasesVectorsDiskStorage:
 
     @staticmethod
     def _get_phrase_vector_data(session: Session, phrase_id: int) -> Optional[Tuple[str, int]]:
-        result = session.query(PhraseVectorJournal, PhraseMatrixFilenameJournal)\
-            .filter(PhraseVectorJournal.file_id == PhraseMatrixFilenameJournal.id)\
-            .where(PhraseVectorJournal.id == phrase_id).one()
+        result = (
+            session.query(PhraseVectorJournal, PhraseMatrixFilenameJournal)
+            .filter(PhraseVectorJournal.file_id == PhraseMatrixFilenameJournal.id)
+            .where(PhraseVectorJournal.id == phrase_id)
+            .one()
+        )
 
         if len(result) == 0:
             return None
@@ -97,14 +113,14 @@ class PhrasesVectorsDiskStorage:
 
     def dump_buffer(self):
         if len(self.phrase_vectors_buffer) == 0:
-            raise RuntimeError('buffer is empty')
+            raise RuntimeError("buffer is empty")
 
         with self.storage_database.session_scope() as session:
             total_vector_count = self._get_vector_count(session)
 
         matrix_name = self.metadata.create_phrase_matrix_name(total_vector_count, len(self.phrase_vectors_buffer))
-        matrix_filename = f'{matrix_name}.npy'
-        tmp_matrix_filepath = self.base_path / ('tmp' + matrix_filename)
+        matrix_filename = f"{matrix_name}.npy"
+        tmp_matrix_filepath = self.base_path / ("tmp" + matrix_filename)
         matrix_filepath = self.base_path / matrix_filename
 
         phrase_matrix = np.vstack(tuple(p.body for p in self.phrase_vectors_buffer))
@@ -158,26 +174,29 @@ class PhrasesVectorsDiskStorage:
 
 def _compare_metadata(metadata: PhrasesVectorsStorageMetadata, metadata_filepath: Path):
     """Сопоставление файла метаданных на диске, с переданными метаданными"""
-    with metadata_filepath.open(mode='r') as f:
+    with metadata_filepath.open(mode="r") as f:
         try:
             stored_metadata = PhrasesVectorsStorageMetadata.from_dict(json.load(f))
         except json.JSONDecodeError:
-            raise ValueError(f'metadata {metadata_filepath} is not a json file')
+            raise ValueError(f"metadata {metadata_filepath} is not a json file")
 
     if metadata != stored_metadata:
-        msg = f'metadata on disk {metadata_filepath} ({stored_metadata}) and ' \
-              f'current metadata ({metadata}) does not equal'
+        msg = (
+            f"metadata on disk {metadata_filepath} ({stored_metadata}) and "
+            f"current metadata ({metadata}) does not equal"
+        )
         raise ValueError(msg)
 
 
-def create_phrase_vector_storage(path: str, vector_model_name: str, phrase_vector_dim: int, dataset_name: str,
-                                 checkpoint_every: int) -> PhrasesVectorsDiskStorage:
+def create_phrase_vector_storage(
+    path: str, vector_model_name: str, phrase_vector_dim: int, dataset_name: str, checkpoint_every: int
+) -> PhrasesVectorsDiskStorage:
     base_path = Path(path)
-    base_vectors_storage_path = base_path / 'vectors'
+    base_vectors_storage_path = base_path / "vectors"
 
-    metadata_filepath = base_path / 'metadata.json'
-    phrase_journal_filepath = base_path / 'phrase_vectors_journal.sqlite3'
-    db_url = f'sqlite:///{phrase_journal_filepath}'
+    metadata_filepath = base_path / "metadata.json"
+    phrase_journal_filepath = base_path / "phrase_vectors_journal.sqlite3"
+    db_url = f"sqlite:///{phrase_journal_filepath}"
 
     metadata = PhrasesVectorsStorageMetadata(vector_model_name, phrase_vector_dim, dataset_name)
 
@@ -193,7 +212,7 @@ def create_phrase_vector_storage(path: str, vector_model_name: str, phrase_vecto
         storage_db = Database.from_url(db_url)
         storage_db.create_all()
 
-        with metadata_filepath.open(mode='w') as f:
+        with metadata_filepath.open(mode="w") as f:
             json.dump(metadata.to_dict(), f)
 
     else:

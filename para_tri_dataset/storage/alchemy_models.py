@@ -14,7 +14,7 @@ class Database:
         self._Session = S
 
     @classmethod
-    def from_url(cls, url: str, echo: bool = False) -> 'Database':
+    def from_url(cls, url: str, echo: bool = False) -> "Database":
         engine = create_engine(url, echo=echo)
         Session = sessionmaker(engine, expire_on_commit=False)
         return cls(engine, Session)
@@ -37,7 +37,7 @@ class Database:
 
 
 class PhraseVectorJournal(Base):
-    __tablename__ = 'phrase_vector_journal'
+    __tablename__ = "phrase_vector_journal"
 
     id = Column(Integer, primary_key=True)
     matrix_row_idx = Column(Integer, nullable=False)
@@ -45,7 +45,7 @@ class PhraseVectorJournal(Base):
 
 
 class PhraseMatrixFilenameJournal(Base):
-    __tablename__ = 'phrase_matrix_filename_journal'
+    __tablename__ = "phrase_matrix_filename_journal"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     filename = Column(String)

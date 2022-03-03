@@ -14,6 +14,9 @@ class AbstractDataclass(abc.ABC):
         return super().__new__(cls)
 
 
+# TODO: добавить в датасет возможность оперировать отношениями типа PhraseRelation(id, paraphrases)
+
+
 @dataclass
 class Phrase(AbstractDataclass):
     id: Any
