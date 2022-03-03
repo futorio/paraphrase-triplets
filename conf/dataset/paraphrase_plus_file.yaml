@@ -1,0 +1,11 @@
+# Загрузка датасета парафраз http://paraphraser.ru/ с диска
+# Обязательные параметры:
+#
+# name: название типа датасета. Нужно для маппинга к конкретному объекту
+# json_filepath: путь до датасета в формате json файла
+# zip_filepath: путь до датасета в формате zip файла, формат внутри файла соответствует файлу по ссылке
+# http://paraphraser.ru/download/get?file_id=1
+#
+# Должно быть установлен либо json_filepath, либо zip_filepath
+
+name: paraphrase_plus_file

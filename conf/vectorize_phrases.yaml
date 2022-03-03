@@ -1,0 +1,17 @@
+# Конфигурация скрипта для перевода датасета парафраз в векторное представление
+# Обязательные параметры:
+#
+# batch_size: размер пачки фраз, который векторная модель векторизует за раз
+# device: размещение векторной модели на cpu или видеокарте (cuda)
+# verbose: уровень логгирования информации (0 - только info, 1 - info + debug)
+# dataset: параметры датасета парафраз
+# vector_model: параметры векторной модели
+# vector_storage: параметры хранилища векторов фраз
+
+batch_size: 64
+device: cpu
+verbose: 0
+__nested_configs__:
+  dataset: paraphrase_plus_file
+  vector_model: sbert_large_mt_nlu_ru
+  vector_storage: file_vector_storage
