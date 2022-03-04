@@ -15,7 +15,7 @@ def get_dataset_from_config(cfg):
     try:
         dataset_name = cfg["name"]
     except KeyError:
-        raise ValueError(f'config has not attribute "name"')
+        raise ValueError('config has not attribute "name"')
 
     try:
         dataset_cls = DATASET_NAMES_MAPPING[dataset_name]

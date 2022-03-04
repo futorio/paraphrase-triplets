@@ -6,7 +6,7 @@ import json
 import os
 import zipfile
 from dataclasses import dataclass
-from typing import Tuple, TypedDict, List, Dict, Generator, Optional
+from typing import Tuple, TypedDict, List, Dict, Generator
 
 from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
 
@@ -67,9 +67,9 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
 
         zip_filepath, json_filepath = cfg.get("zip_filepath"), cfg.get("json_filepath")
         if zip_filepath is None and json_filepath is None:
-            raise ValueError(f"config does not contain zip_filepath or json_filepath")
+            raise ValueError("config does not contain zip_filepath or json_filepath")
         elif zip_filepath is not None and json_filepath is not None:
-            raise ValueError(f"config must contain zip_filepath or json_filepath not both")
+            raise ValueError("config must contain zip_filepath or json_filepath not both")
 
         elif zip_filepath is not None:
             return cls.from_zip(zip_filepath)

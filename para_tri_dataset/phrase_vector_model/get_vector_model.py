@@ -15,7 +15,7 @@ def get_vector_model_from_config(cfg):
     try:
         model_name = cfg["name"]
     except KeyError:
-        raise ValueError(f'config has not attribute "name"')
+        raise ValueError('config has not attribute "name"')
 
     try:
         model_cls = MODELS_NAMES_MAPPING[model_name]

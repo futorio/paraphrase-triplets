@@ -61,7 +61,7 @@ class SbertLargeMTNLU(PhraseVectorModel):
         try:
             seq_len = cfg["seq_len"]
         except KeyError:
-            raise ValueError(f"config has not attribute seq_len")
+            raise ValueError("config has not attribute seq_len")
 
         if model_path is None:
             path = cls.HF_URL
