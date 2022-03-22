@@ -7,5 +7,13 @@
 # Необязательные параметры:
 # path: путь до модели на диске, если не указан, модель будет скачана с hf хаба
 
-name: sbert_large_mt_nlu_ru
 seq_len: 24
+# path: sberbank-ai/sbert_large_mt_nlu_ru
+
+__val_schema__:
+  seq_len:
+    type: integer
+    min: 5
+  path:
+    type: string
+    required: false

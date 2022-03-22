@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 from transformers import AutoTokenizer, AutoModel
 import torch
 
+from para_tri_dataset.config import Config
 from para_tri_dataset.paraphrase_dataset.base import Phrase
 from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel, PhraseNumpyVector
 
@@ -20,7 +21,10 @@ def mean_pooling(model_output, attention_mask) -> torch.FloatTensor:
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
     sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-    return sum_embeddings / sum_mask
+    vectors = sum_embeddings / sum_mask
+
+    inv_norms = torch.linalg.inv(torch.diag(torch.linalg.norm(vectors, ord=2, dim=1)))
+    return inv_norms @ vectors
 
 
 class SbertLargeMTNLU(PhraseVectorModel):
@@ -43,25 +47,9 @@ class SbertLargeMTNLU(PhraseVectorModel):
         return "sbert_large_mt_nlu_ru"
 
     @classmethod
-    def from_config(cls, cfg: Dict[str, Any]) -> "SbertLargeMTNLU":
-        # TODO: просто скопировал это из ParaPhraserPlusFileDataset.from_config нужно вынести этот код
-
-        try:
-            name = cfg["name"]
-        except KeyError:
-            raise ValueError('config has not "name" attribute')
-
-        dataset_name = cls.get_name()
-        if dataset_name != name:
-            msg = f'config dataset name "{name}" does not compare with dataset class name "{dataset_name}"'
-            raise ValueError(msg)
-
+    def from_config(cls, cfg: Config) -> "SbertLargeMTNLU":
         model_path = cfg.get("path")
-
-        try:
-            seq_len = cfg["seq_len"]
-        except KeyError:
-            raise ValueError("config has not attribute seq_len")
+        seq_len = cfg.get("seq_len")
 
         if model_path is None:
             path = cls.HF_URL

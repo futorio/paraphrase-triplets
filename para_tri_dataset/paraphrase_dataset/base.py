@@ -5,6 +5,8 @@ import abc
 from dataclasses import dataclass
 from typing import Any, Generator, Dict, Sequence
 
+from para_tri_dataset.config import Config
+
 
 @dataclass
 class AbstractDataclass(abc.ABC):
@@ -35,7 +37,7 @@ class ParaphraseDataset(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_config(cls, cfg: Dict[str, Any]) -> "ParaphraseDataset":
+    def from_config(cls, cfg: Config) -> "ParaphraseDataset":
         pass
 
     @abc.abstractmethod

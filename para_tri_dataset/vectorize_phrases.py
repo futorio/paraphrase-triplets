@@ -4,17 +4,14 @@
 
 import logging
 import argparse
+import pprint
 from pathlib import Path
 
 import torch
-import yaml
-
-import cerberus
-import cerberus.errors
 
 from tqdm import tqdm
 
-from para_tri_dataset.config import unpack_config, ValidationConfigError
+from para_tri_dataset.config import create_config
 from para_tri_dataset.paraphrase_dataset import get_dataset_from_config
 from para_tri_dataset.phrase_vector_model import get_vector_model_from_config
 from para_tri_dataset.storage import create_phrase_vector_storage
@@ -34,16 +31,6 @@ def iterable_chunk(seq, size: int):
         yield chunk
 
 
-CONFIG_VALIDATION_SCHEMA = {
-    "batch_size": {"type": "integer", "min": 1},
-    "device": {"type": "string", "allowed": ["cpu", "cuda"]},
-    "verbose": {"type": "integer", "allowed": [0, 1]},
-    "dataset": {"type": "dict"},
-    "vector_model": {"type": "dict"},
-    "vector_storage": {"type": "dict"},
-}
-
-
 def main():
     arg_parser = argparse.ArgumentParser("Перевод датасета парафраз в векторное представление")
 
@@ -52,16 +39,9 @@ def main():
 
     args = arg_parser.parse_args()
 
-    cfg = unpack_config(args.config_name, args.config_path)
-    yaml_stream_cfg = yaml.dump(cfg, Dumper=yaml.CDumper)
+    cfg = create_config(args.config_path, args.config_name)
 
-    validator = cerberus.Validator(CONFIG_VALIDATION_SCHEMA, require_all=True)
-
-    validation_success = validator(cfg)
-    if not validation_success:
-        raise ValidationConfigError(f"main config validation fail: {validator.errors}")
-
-    verbose = cfg["verbose"]
+    verbose = cfg.get("verbose")
     if verbose == 0:
         logging.basicConfig(level=logging.INFO)
     elif verbose == 1:
@@ -69,17 +49,19 @@ def main():
     else:
         raise ValueError(f"unknown verbose level {verbose}")
 
-    logger.info(f"start with config:\n\n{yaml_stream_cfg}\n")
+    pp_config = pprint.pformat(cfg.to_dict())
+    logger.info(f"start with config:\n\n{pp_config}\n")
 
     logger.info("Stage: load dataset")
-    dataset = get_dataset_from_config(cfg["dataset"])
+    dataset = get_dataset_from_config(cfg.get_nested_config("dataset"))
+
     logger.info('done. Dataset name: "%s"', dataset.get_name())
 
-    device_name = cfg["device"]
+    device_name = cfg.get("device")
     device = torch.device(device_name)
 
     logger.info("Stage: load phrase vector model")
-    phrase_model = get_vector_model_from_config(cfg["vector_model"])
+    phrase_model = get_vector_model_from_config(cfg.get_nested_config("vector_model"))
     logger.info('DONE. Vector model name: "%s"', phrase_model.get_name())
 
     logger.info(f"Stage: push vector model to device {device}")
@@ -87,28 +69,21 @@ def main():
 
     logger.info("Stage: load phrase vector storage")
 
-    # TODO: валидация дожна быть рядом со структурами
-    try:
-        vector_storage_path = cfg["vector_storage"]["output_path"]
-    except KeyError:
-        raise ValueError("config does not have vector_storage -> output_path")
-
-    try:
-        checkpoint_every = cfg["vector_storage"]["checkpoint_every"]
-    except KeyError:
-        raise ValueError("config does not have vector_storage -> checkpoint_every")
+    vector_storage_cfg = cfg.get_nested_config("vector_storage")
+    if vector_storage_cfg.name != "file_vector_storage":
+        raise ValueError('only "file_vector_storage" support')
 
     phrase_vector_storage = create_phrase_vector_storage(
-        vector_storage_path,
+        vector_storage_cfg.get("output_path"),
         phrase_model.get_name(),
         phrase_model.get_vector_size(),
         dataset.get_name(),
-        checkpoint_every,
+        vector_storage_cfg.get("checkpoint_every"),
     )
 
     total_phrase_vectors = phrase_vector_storage.get_vector_count()
 
-    phrases_iterator = iterable_chunk(dataset.iterate_phrases(total_phrase_vectors), cfg["batch_size"])
+    phrases_iterator = iterable_chunk(dataset.iterate_phrases(total_phrase_vectors), cfg.get("batch_size"))
 
     logger.info(f"DONE. Total vectors in storage {total_phrase_vectors}")
 
@@ -121,6 +96,7 @@ def main():
         pbar.update(len(phrases_batch))
 
     pbar.close()
+    phrase_vector_storage.close()
     logger.info("DONE. Exit.")
 
 

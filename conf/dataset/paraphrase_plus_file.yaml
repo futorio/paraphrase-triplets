@@ -8,4 +8,17 @@
 #
 # Должно быть установлен либо json_filepath, либо zip_filepath
 
-name: paraphrase_plus_file
+name: paraphrase_plus_f
+# json_filepath: .
+
+__val_schema__:
+  name:
+    type: string
+  json_filepath:
+    type: string
+    excludes: zip_filepath
+    required: true
+  zip_filepath:
+    type: string
+    excludes: json_filepath
+    required: true
