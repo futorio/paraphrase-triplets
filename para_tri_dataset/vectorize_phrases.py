@@ -70,7 +70,7 @@ def main():
     logger.info("Stage: load phrase vector storage")
 
     vector_storage_cfg = cfg.get_nested_config("vector_storage")
-    if vector_storage_cfg.name != 'file_vector_storage':
+    if vector_storage_cfg.name != "file_vector_storage":
         raise ValueError('only "file_vector_storage" support')
 
     phrase_vector_storage = create_phrase_vector_storage(

@@ -55,7 +55,7 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
             offset += phrases_count
 
     @classmethod
-    def from_config(cls, cfg: Config) -> 'ParaPhraserPlusFileDataset':
+    def from_config(cls, cfg: Config) -> "ParaPhraserPlusFileDataset":
         zip_filepath, json_filepath = cfg.get("zip_filepath", None), cfg.get("json_filepath", None)
 
         if zip_filepath is not None:
