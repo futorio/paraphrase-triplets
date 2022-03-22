@@ -5,6 +5,7 @@ from typing import Sequence, Any, Dict
 import numpy as np
 import torch
 
+from para_tri_dataset.config import Config
 from para_tri_dataset.paraphrase_dataset.base import Phrase
 
 
@@ -36,7 +37,7 @@ class PhraseVectorModel(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_config(cls, cfg: Dict[str, Any]) -> "PhraseVectorModel":
+    def from_config(cls, cfg: Config) -> "PhraseVectorModel":
         pass
 
     @abc.abstractmethod

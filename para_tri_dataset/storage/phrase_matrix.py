@@ -77,6 +77,10 @@ class PhrasesVectorsDiskStorage:
 
         self.phrase_vectors_buffer = []
 
+    def close(self):
+        if len(self.phrase_vectors_buffer) > 0:
+            self.dump_buffer()
+
     @staticmethod
     def _add_phrases_matrix_to_journal(session: Session, filename: str, phrase_vector_ids: Sequence[int]):
         filename_journal_record = PhraseMatrixFilenameJournal(filename=filename)

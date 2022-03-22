@@ -1,25 +1,60 @@
+import copy
 from pathlib import Path
+from typing import Optional, Any, Union
 
 import yaml
+from cerberus import Validator
 
-MAX_CONFIG_DEPTH = 3
-NESTED_CONFIGS_KEY = "__nested_configs__"
+MAX_CONFIG_DEPTH = 1
+SYSTEM_CONFIG_FIELDS = ["__nested_configs__", "__val_schema__"]
 
 
-class ValidationConfigError(ValueError):
+class CustomNone:
     pass
 
 
-def unpack_config(config_name: str, base_path: Path, depth: int = 0) -> dict:
-    """
-    Распаковывает YAML файл конфигурации в словарь.
+NONE_ = CustomNone()
 
-    по специальному ключу __nested_configs__ указывается маппинг "название поля : название конфигурации".
-    При распаковке конфигурации по названию поля указывается данные из файла, который находится в папке с названием
-    "название поля" и в файле "название конфигурации.yaml" или "название конфигурации.yml"
-    """
+
+class Config:
+    def __init__(self, name: str, data: dict, nested_configs, type_: str = '__main__'):
+        self.name = name
+        self.type_ = type_
+        self.data = data
+        self.nested_configs = nested_configs
+
+    def __repr__(self):
+        data_part = ", ".join(f"{k}={v}" for k, v in self.data.items())
+        nested_part = None
+        if self.nested_configs is not None:
+            nested_part = ','.join(ncfg.type_ for ncfg in self.nested_configs)
+
+        return f"Config(name={self.name}, type={self.type_}, data=({data_part}), nested_configs=({nested_part}))"
+
+    def get(self, key: str, default_value: Union[Any, CustomNone] = NONE_):
+        if isinstance(default_value, CustomNone):
+            return self.data[key]
+        else:
+            return self.data.get(key, default_value)
+
+    def get_nested_config(self, key: str) -> 'Config':
+        for nested_config in self.nested_configs:
+            if nested_config.type_ == key:
+                return nested_config
+        else:
+            raise ValueError(f'config {key} not found')
+
+    def to_dict(self) -> dict:
+        data = copy.deepcopy(self.data)
+        for config in self.nested_configs:
+            data[config.type_] = config.to_dict()
+
+        return data
+
+
+def create_config(base_path: Path, config_name: str, depth: int = 0, type_: str = '__main__'):
     if depth > MAX_CONFIG_DEPTH:
-        raise ValueError("config max depth")
+        raise ValueError(f'max depth config {depth}')
 
     yaml_config_filepath = (base_path / config_name).with_suffix(".yaml")
     yml_config_filepath = (base_path / config_name).with_suffix(".yml")
@@ -36,16 +71,20 @@ def unpack_config(config_name: str, base_path: Path, depth: int = 0) -> dict:
     stream = config_filepath.open(mode="r").read()
     raw_config_data = yaml.load(stream, Loader=yaml.CLoader)
 
-    config_data = {k: v for k, v in raw_config_data.items() if k != "__nested_configs__"}
+    config_data = {k: v for k, v in raw_config_data.items() if k not in SYSTEM_CONFIG_FIELDS}
 
-    nested_configs = raw_config_data.get("__nested_configs__", None)
-    if nested_configs is None:
-        return config_data
+    if "__val_schema__" not in raw_config_data:
+        raise ValueError(f'config file {config_filepath} does not contain validation schema "__val_schema__"')
 
-    for field_name, nested_config_name in nested_configs.items():
-        nested_base_path = base_path / field_name
-        nested_config_data = unpack_config(nested_config_name, nested_base_path, depth + 1)
+    validator = Validator(raw_config_data['__val_schema__'], reqire_all=True)
+    if not validator(config_data):
+        raise ValueError(validator.errors)
 
-        config_data[field_name] = nested_config_data
+    nested_configs = []
+    if "__nested_configs__" in raw_config_data:
+        for nested_field_name, nested_config_name in raw_config_data['__nested_configs__'].items():
+            nested_base_path = base_path / nested_field_name
+            nested_configs.append(create_config(nested_base_path, nested_config_name, depth + 1,
+                                                type_=nested_field_name))
 
-    return config_data
+    return Config(config_name, config_data, nested_configs, type_)

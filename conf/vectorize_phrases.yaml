@@ -10,7 +10,22 @@
 
 batch_size: 64
 device: cpu
-verbose: 0
+verbose: 1
+__val_schema__:
+  batch_size:
+    type: integer
+    min: 1
+  device:
+    type: string
+    allowed:
+      - device
+      - cpu
+  verbose:
+    type: integer
+    allowed:
+      - 0
+      - 1
+
 __nested_configs__:
   dataset: paraphrase_plus_file
   vector_model: sbert_large_mt_nlu_ru

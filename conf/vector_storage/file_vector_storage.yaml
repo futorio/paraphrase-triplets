@@ -4,5 +4,13 @@
 # name: название для маппинга нужного объекта
 # output_path: Путь, куда будут сохраняться файлы
 # checkpoint_every: Максимальное количество векторов, которое хранится в памяти до записи
-name: file_vector_storage
-checkout_every: 128
+
+checkpoint_every: 1
+# output_path: .
+
+__val_schema__:
+  checkpoint_every:
+    type: integer
+    min: 1
+  output_path:
+    type: string
