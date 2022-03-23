@@ -58,8 +58,7 @@ class PhrasesVectorsStorageMetadata:
 
 class PhrasesVectorsDiskStorage:
     """
-    Хранение векторов фраз на диске в виде .npz файлов.
-
+    Хранение векторов фраз на диске в виде .npy файлов.
     """
 
     def __init__(

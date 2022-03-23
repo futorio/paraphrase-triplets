@@ -11,11 +11,32 @@ from para_tri_dataset.phrase_vector_model.base import PhraseVectorModel, PhraseN
 
 
 DEFAULT_DEVICE = torch.device("cpu")
+EPSILON = 1e-7
+
+
+def l2_normalize(vectors: torch.FloatTensor) -> torch.FloatTensor:
+    """
+    Создание векторов с единичной l2 нормой.
+
+    Из матрицы построчно вычисляется вектор l2 нормы
+    Из этого вектора строится диагональная матрица
+    Диагональная матрица инвертируется в значения обратные l2 нормам векторов
+
+    При матричном умножении диагональной матрицы на матрицу векторов i-й вектор умножается на i-й диагональный
+    элемент обратной l2 нормы данного вектора.
+
+    Чтобы диагональная матрица l2 норм была невырожденная, к вектору l2 норм прибавляется небольшое значение EPSILON
+    """
+    l2_norms = torch.linalg.vector_norm(vectors, ord=2, dim=1)
+    l2_norms += EPSILON
+
+    l2_matrix = torch.diag(l2_norms)
+    inv_l2 = torch.linalg.inv(l2_matrix)
+    return inv_l2 @ vectors
 
 
 # Mean Pooling - Take attention mask into account for correct averaging
-def mean_pooling(model_output, attention_mask) -> torch.FloatTensor:
-
+def mean_pooling(model_output, attention_mask, normalize_l2: bool = False) -> torch.FloatTensor:
     # First element of model_output contains all token embeddings
     token_embeddings = model_output[0]
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
@@ -23,8 +44,10 @@ def mean_pooling(model_output, attention_mask) -> torch.FloatTensor:
     sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
     vectors = sum_embeddings / sum_mask
 
-    inv_norms = torch.linalg.inv(torch.diag(torch.linalg.norm(vectors, ord=2, dim=1)))
-    return inv_norms @ vectors
+    if normalize_l2:
+        return l2_normalize(vectors)
+    else:
+        return vectors
 
 
 class SbertLargeMTNLU(PhraseVectorModel):
@@ -48,15 +71,10 @@ class SbertLargeMTNLU(PhraseVectorModel):
 
     @classmethod
     def from_config(cls, cfg: Config) -> "SbertLargeMTNLU":
-        model_path = cfg.get("path")
+        model_path = cfg.get("path", None)
         seq_len = cfg.get("seq_len")
 
-        if model_path is None:
-            path = cls.HF_URL
-        else:
-            path = model_path
-
-        return cls.load(path, seq_len)
+        return cls.load(model_path, seq_len)
 
     @classmethod
     def load(cls, model_path: Optional[str], seq_len: int = 24) -> "SbertLargeMTNLU":
@@ -89,10 +107,11 @@ class SbertLargeMTNLU(PhraseVectorModel):
         with torch.no_grad():
             output = self.model(**tokenized)
 
-        matrix = mean_pooling(output, tokenized["attention_mask"]).cpu().numpy()
+        matrix = mean_pooling(output, tokenized["attention_mask"], normalize_l2=True).cpu().numpy()
 
         phrases_vectors = []
-        for phrase, vector in zip(phrases, matrix):
+        for i in range(len(phrases)):
+            phrase, vector = phrases[i], matrix[i]
             phrases_vectors.append(PhraseNumpyVector(phrase.id, vector))
 
         return phrases_vectors
