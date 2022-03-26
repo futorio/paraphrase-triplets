@@ -9,13 +9,6 @@ MAX_CONFIG_DEPTH = 1
 SYSTEM_CONFIG_FIELDS = ["__nested_configs__", "__val_schema__"]
 
 
-class CustomNone:
-    pass
-
-
-NONE_ = CustomNone()
-
-
 class Config:
     def __init__(self, name: str, data: dict, nested_configs, type_: str = "__main__"):
         self.name = name
@@ -31,11 +24,8 @@ class Config:
 
         return f"Config(name={self.name}, type={self.type_}, data=({data_part}), nested_configs=({nested_part}))"
 
-    def get(self, key: str, default_value: Union[Any, CustomNone] = NONE_):
-        if isinstance(default_value, CustomNone):
-            return self.data[key]
-        else:
-            return self.data.get(key, default_value)
+    def get(self, key: str, default_value: Optional[Any] = None):
+        return self.data.get(key, default_value)
 
     def get_nested_config(self, key: str) -> "Config":
         for nested_config in self.nested_configs:
