@@ -21,7 +21,8 @@ from typing import Sequence, Optional, Tuple
 import numpy as np
 from sqlalchemy.orm import Session
 
-from para_tri_dataset.storage.alchemy_models import PhraseVectorJournal, PhraseMatrixFilenameJournal, Database
+from para_tri_dataset.alchemy_utils import Database
+from para_tri_dataset.storage.alchemy_models import Base, PhraseVectorJournal, PhraseMatrixFilenameJournal
 from para_tri_dataset.phrase_vector_model.base import PhraseNumpyVector
 
 
@@ -213,7 +214,7 @@ def create_phrase_vector_storage(
         base_vectors_storage_path.mkdir()
 
         storage_db = Database.from_url(db_url)
-        storage_db.create_all()
+        storage_db.create_all(Base)
 
         with metadata_filepath.open(mode="w") as f:
             json.dump(metadata.to_dict(), f)
