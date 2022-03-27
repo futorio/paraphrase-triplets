@@ -6,7 +6,7 @@ import json
 import os
 import zipfile
 from dataclasses import dataclass
-from typing import Tuple, TypedDict, List, Dict, Generator, Any
+from typing import Tuple, TypedDict, List, Dict, Generator, Any, Sequence
 
 from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
 from para_tri_dataset.config import Config
@@ -26,33 +26,27 @@ class ParaPhraserPlusPhrase(Phrase):
     id: int
     text: str
 
-    paraphrases_ids: Tuple[int, ...]
+
+def parse_json_dataset(dataset: SerializedDatasetType)\
+        -> Generator[Tuple[ParaPhraserPlusPhrase, Tuple[int, ...]], None, None]:
+
+    offset = 0
+    for serialized_record in dataset.values():
+        phrases_count = len(serialized_record["headlines"])
+
+        for i, text in enumerate(serialized_record["headlines"]):
+            phrase_id = offset + i
+            paraphrases_ids = tuple(offset + j for j in range(phrases_count) if j != i)
+
+            yield ParaPhraserPlusPhrase(phrase_id, text), paraphrases_ids
+
+        offset += phrases_count
 
 
 class ParaPhraserPlusFileDataset(ParaphraseDataset):
-    def __init__(self, phrases: Tuple[ParaPhraserPlusPhrase, ...]):
+    def __init__(self, phrases: Tuple[ParaPhraserPlusPhrase, ...], phrases_relations: Tuple[Tuple[int, ...], ...]):
         self.phrases = phrases
-
-    @staticmethod
-    def get_name() -> str:
-        return "paraphrase_plus_file"
-
-    def size(self) -> int:
-        return len(self.phrases)
-
-    @staticmethod
-    def parse_json_dataset(dataset: SerializedDatasetType) -> Generator[ParaPhraserPlusPhrase, None, None]:
-        offset = 0
-        for serialized_record in dataset.values():
-            phrases_count = len(serialized_record["headlines"])
-
-            for i, text in enumerate(serialized_record["headlines"]):
-                phrase_id = offset + i
-                paraphrases_ids = tuple(offset + j for j in range(phrases_count) if j != i)
-
-                yield ParaPhraserPlusPhrase(phrase_id, text, paraphrases_ids)
-
-            offset += phrases_count
+        self.phrases_relations = phrases_relations
 
     @classmethod
     def from_config(cls, cfg: Config) -> "ParaPhraserPlusFileDataset":
@@ -62,6 +56,20 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
             return cls.from_zip(zip_filepath)
         else:
             return cls.from_json(json_filepath)
+
+    @classmethod
+    def from_json(cls, filepath: str) -> "ParaPhraserPlusFileDataset":
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError(f"dataset json {filepath} not exists")
+
+        try:
+            with open(filepath, "r") as f:
+                dataset: SerializedDatasetType = json.load(f)
+        except json.JSONDecodeError:
+            raise ValueError(f"file {filepath} is not a json")
+
+        phrases, phrases_relations = tuple(zip(*parse_json_dataset(dataset)))
+        return cls(phrases, phrases_relations)
 
     @classmethod
     def from_zip(cls, filepath: str) -> "ParaPhraserPlusFileDataset":
@@ -80,22 +88,14 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
             with zf.open("ParaPhraserPlus/ParaPhraserPlus.json", "r") as f:
                 dataset: SerializedDatasetType = json.load(f)
 
-        phrases = tuple(cls.parse_json_dataset(dataset))
-        return cls(phrases)
+        phrases, phrases_relations = tuple(zip(*parse_json_dataset(dataset)))
+        return cls(phrases, phrases_relations)
 
-    @classmethod
-    def from_json(cls, filepath: str) -> "ParaPhraserPlusFileDataset":
-        if not os.path.isfile(filepath):
-            raise FileNotFoundError(f"dataset json {filepath} not exists")
+    def size(self) -> int:
+        return len(self.phrases)
 
-        try:
-            with open(filepath, "r") as f:
-                dataset: SerializedDatasetType = json.load(f)
-        except json.JSONDecodeError:
-            raise ValueError(f"file {filepath} is not a json")
-
-        phrases = tuple(cls.parse_json_dataset(dataset))
-        return cls(phrases)
+    def iterate_phrases_id(self, offset: int = 0) -> Generator[int, None, None]:
+        yield from (p.id for p in self.phrases)
 
     def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
         yield from self.phrases[offset:]
@@ -103,9 +103,21 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
     def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
         try:
             return self.phrases[phrase_id]
-        except IndexError:
-            raise ValueError(f"not found phrase by id {phrase_id}")
+        except IndexError as err:
+            raise ValueError(f"not found phrase by id {phrase_id}") from err
 
     def get_paraphrases(self, phrase: ParaPhraserPlusPhrase) -> Tuple[ParaPhraserPlusPhrase, ...]:
         """Возвращает список фраз, которые являются парафразами данного"""
-        return tuple(self.phrases[p_id] for p_id in phrase.paraphrases_ids)
+        try:
+            paraphrases_ids = self.phrases_relations[phrase.id]
+        except IndexError as err:
+            raise ValueError(f'not fount phrase by id {phrase.id}') from err
+
+        return tuple(self.get_phrase_by_id(p_id) for p_id in paraphrases_ids)
+
+    def get_paraphrases_id(self, phrase_id: Any) -> Sequence[int]:
+        """Возвращает id фраз, которые являются парафразами данного"""
+        try:
+            return self.phrases_relations[phrase_id]
+        except IndexError as err:
+            raise ValueError(f"not found phrase by id {phrase_id}") from err

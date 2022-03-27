@@ -3,7 +3,7 @@
 """
 import abc
 from dataclasses import dataclass
-from typing import Any, Generator, Dict, Sequence
+from typing import Any, Generator, Sequence
 
 from para_tri_dataset.config import Config
 
@@ -26,14 +26,6 @@ class Phrase(AbstractDataclass):
 
 
 class ParaphraseDataset(abc.ABC):
-    @staticmethod
-    @abc.abstractmethod
-    def get_name() -> str:
-        pass
-
-    @abc.abstractmethod
-    def size(self) -> int:
-        pass
 
     @classmethod
     @abc.abstractmethod
@@ -41,7 +33,15 @@ class ParaphraseDataset(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def size(self) -> int:
+        pass
+
+    @abc.abstractmethod
     def iterate_phrases(self, offset: int = 0) -> Generator[Phrase, None, None]:
+        pass
+
+    @abc.abstractmethod
+    def iterate_phrases_id(self, offset: int = 0) -> Generator[Any, None, None]:
         pass
 
     @abc.abstractmethod
@@ -49,5 +49,9 @@ class ParaphraseDataset(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_paraphrases(self, phrase) -> Sequence[Phrase]:
+    def get_paraphrases(self, phrase_id: Any) -> Sequence[Phrase]:
+        pass
+
+    @abc.abstractmethod
+    def get_paraphrases_id(self, phrase_id: Any) -> Sequence[Any]:
         pass

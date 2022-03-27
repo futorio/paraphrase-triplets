@@ -10,7 +10,7 @@ def get_requirements() -> List[str]:
 
 setup(
     name="paraphrase-triplets",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/futorio/paraphrase-triplets.git",
     author="Futorio Franklin",
     description="Create triplet dataset from paraphrase with ANN negative sampling",

@@ -55,7 +55,7 @@ def main():
     logger.info("Stage: load dataset")
     dataset = get_dataset_from_config(cfg.get_nested_config("dataset"))
 
-    logger.info('done. Dataset name: "%s"', dataset.get_name())
+    logger.info('done. Dataset name: "%s"', cfg.get_nested_config("dataset").name)
 
     device_name = cfg.get("device")
     device = torch.device(device_name)
@@ -77,7 +77,7 @@ def main():
         vector_storage_cfg.get("output_path"),
         phrase_model.get_name(),
         phrase_model.get_vector_size(),
-        dataset.get_name(),
+        cfg.get_nested_config("dataset").name,
         vector_storage_cfg.get("checkpoint_every"),
     )
 

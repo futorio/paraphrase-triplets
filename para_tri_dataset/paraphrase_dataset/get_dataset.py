@@ -1,16 +1,11 @@
 """
 Инициализация датасета из конфига
 """
-from typing import Dict
-
 from para_tri_dataset.paraphrase_dataset.para_phraser_plus import ParaPhraserPlusFileDataset
-from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset
 
 from para_tri_dataset.config import Config
 
-DATASETS = [ParaPhraserPlusFileDataset]
-
-DATASET_NAMES_MAPPING: Dict[str, ParaphraseDataset] = {dataset_cls.get_name(): dataset_cls for dataset_cls in DATASETS}
+DATASET_NAMES_MAPPING = {"paraphrase_plus_file": ParaPhraserPlusFileDataset}
 
 
 def get_dataset_from_config(cfg: Config):

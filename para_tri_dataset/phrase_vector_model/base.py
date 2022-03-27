@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import Sequence, Any, Dict
+from typing import Sequence, Any
 
 import numpy as np
 import torch
@@ -30,10 +30,6 @@ class PhraseNumpyVector(PhraseVector):
 
 
 class PhraseVectorModel(abc.ABC):
-    @staticmethod
-    @abc.abstractmethod
-    def get_name() -> str:
-        pass
 
     @classmethod
     @abc.abstractmethod

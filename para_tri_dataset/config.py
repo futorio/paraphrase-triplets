@@ -1,6 +1,6 @@
 import copy
 from pathlib import Path
-from typing import Optional, Any, Union
+from typing import Optional, Any
 
 import yaml
 from cerberus import Validator
