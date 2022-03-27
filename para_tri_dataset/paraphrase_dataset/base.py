@@ -26,7 +26,6 @@ class Phrase(AbstractDataclass):
 
 
 class ParaphraseDataset(abc.ABC):
-
     @classmethod
     @abc.abstractmethod
     def from_config(cls, cfg: Config) -> "ParaphraseDataset":

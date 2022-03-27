@@ -30,7 +30,6 @@ class PhraseNumpyVector(PhraseVector):
 
 
 class PhraseVectorModel(abc.ABC):
-
     @classmethod
     @abc.abstractmethod
     def from_config(cls, cfg: Config) -> "PhraseVectorModel":

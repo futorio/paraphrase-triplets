@@ -27,8 +27,9 @@ class ParaPhraserPlusPhrase(Phrase):
     text: str
 
 
-def parse_json_dataset(dataset: SerializedDatasetType)\
-        -> Generator[Tuple[ParaPhraserPlusPhrase, Tuple[int, ...]], None, None]:
+def parse_json_dataset(
+    dataset: SerializedDatasetType,
+) -> Generator[Tuple[ParaPhraserPlusPhrase, Tuple[int, ...]], None, None]:
 
     offset = 0
     for serialized_record in dataset.values():
@@ -111,7 +112,7 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
         try:
             paraphrases_ids = self.phrases_relations[phrase.id]
         except IndexError as err:
-            raise ValueError(f'not fount phrase by id {phrase.id}') from err
+            raise ValueError(f"not fount phrase by id {phrase.id}") from err
 
         return tuple(self.get_phrase_by_id(p_id) for p_id in paraphrases_ids)
 

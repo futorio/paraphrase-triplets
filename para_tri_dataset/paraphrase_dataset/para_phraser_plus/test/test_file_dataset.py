@@ -41,7 +41,10 @@ def dataset(phrase_a, phrase_b) -> ParaPhraserPlusFileDataset:
             phrase_a,
             phrase_b,
         ),
-        ((1,), (0,),)
+        (
+            (1,),
+            (0,),
+        ),
     )
 
 
@@ -75,11 +78,15 @@ def test_iterate_phrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b
     assert next(dataset.iterate_phrases(offset=1)) == phrase_b
 
     phrases_id = tuple(dataset.iterate_phrases_id())
-    assert phrases_id == (0, 1,)
+    assert phrases_id == (
+        0,
+        1,
+    )
 
 
-def test_get_paraphrases(dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhraserPlusPhrase,
-                         phrase_b: ParaPhraserPlusPhrase):
+def test_get_paraphrases(
+    dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhraserPlusPhrase, phrase_b: ParaPhraserPlusPhrase
+):
 
     paraphrases_a = dataset.get_paraphrases(phrase_a)
     assert len(paraphrases_a) == 1
@@ -98,8 +105,9 @@ def test_get_paraphrases(dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhra
     assert paraphrases_id_b[0] == phrase_a.id
 
 
-def test_get_phrase_by_idx(dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhraserPlusPhrase,
-                           phrase_b: ParaPhraserPlusPhrase):
+def test_get_phrase_by_idx(
+    dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhraserPlusPhrase, phrase_b: ParaPhraserPlusPhrase
+):
 
     assert phrase_a == dataset.get_phrase_by_id(0)
     assert phrase_b == dataset.get_phrase_by_id(1)
