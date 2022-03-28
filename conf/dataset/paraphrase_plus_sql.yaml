@@ -1,0 +1,16 @@
+# Загрузка датасета парафраз http://paraphraser.ru/ из sql базы данных
+# Обязательные параметры:
+#
+# db_url: адрес базы данных в формате url
+# подробнее https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
+
+# db_url:
+scroll_size: 100
+
+__val_schema__:
+  db_url:
+    type: string
+    required: true
+  scroll_size:
+    type: integer
+    required: false
