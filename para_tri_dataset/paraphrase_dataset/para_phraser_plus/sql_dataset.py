@@ -31,19 +31,16 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
             return session.query(ParaphraserPlusDataset).count()
 
     def _scroll_rows(self, session, offset: int, fields) -> Query:
-        return (session
-                .query(*fields)
-                .order_by(ParaphraserPlusDataset.id)
-                .limit(self.scroll_size + 1)
-                .offset(offset))
+        return session.query(*fields).order_by(ParaphraserPlusDataset.id).limit(self.scroll_size + 1).offset(offset)
 
     def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
         with self.storage_db.session_scope() as session:
             try:
-                row = (session
-                       .query(ParaphraserPlusDataset.id, ParaphraserPlusDataset.text)
-                       .where(ParaphraserPlusDataset.id == phrase_id)
-                       ).one()
+                row = (
+                    session.query(ParaphraserPlusDataset.id, ParaphraserPlusDataset.text).where(
+                        ParaphraserPlusDataset.id == phrase_id
+                    )
+                ).one()
             except sqlalchemy.exc.NoResultFound as ex:
                 raise ValueError(f"not found phrase by id {phrase_id}") from ex
 
@@ -51,15 +48,13 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
 
     @staticmethod
     def _get_paraphrases_query(phrase_id: int, fields) -> Query:
-        group_id_sub = (select(ParaphraserPlusDataset.group_id)
-                        .where(ParaphraserPlusDataset.id == phrase_id)
-                        ).scalar_subquery()
+        group_id_sub = (
+            select(ParaphraserPlusDataset.group_id).where(ParaphraserPlusDataset.id == phrase_id)
+        ).scalar_subquery()
 
-        result_query = (select(*fields)
-                        .where(and_(ParaphraserPlusDataset.group_id == group_id_sub,
-                                    ParaphraserPlusDataset.id != phrase_id)
-                               )
-                        )
+        result_query = select(*fields).where(
+            and_(ParaphraserPlusDataset.group_id == group_id_sub, ParaphraserPlusDataset.id != phrase_id)
+        )
 
         return result_query
 
@@ -104,11 +99,10 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
                 fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.text]
                 rows = self._scroll_rows(session, offset, fields).all()
 
-                for row in rows[:self.scroll_size]:
+                for row in rows[: self.scroll_size]:
                     yield ParaPhraserPlusPhrase(id=row.id, text=row.text)
 
                 if self.scroll_size + 1 > len(rows):
                     break
 
                 offset += self.scroll_size
-

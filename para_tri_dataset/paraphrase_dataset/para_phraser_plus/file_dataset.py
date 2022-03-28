@@ -5,7 +5,7 @@
 import json
 import os
 import zipfile
-from typing import Tuple, TypedDict, List, Dict, Generator, Any, Sequence
+from typing import Tuple, TypedDict, List, Dict, Generator, Sequence
 
 from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset
 from para_tri_dataset.config import Config
