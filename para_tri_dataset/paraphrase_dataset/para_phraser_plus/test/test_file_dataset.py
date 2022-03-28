@@ -4,8 +4,8 @@ import pytest
 
 from para_tri_dataset.paraphrase_dataset.para_phraser_plus.file_dataset import (
     ParaPhraserPlusFileDataset,
-    ParaPhraserPlusPhrase,
 )
+from para_tri_dataset.paraphrase_dataset.para_phraser_plus.base import ParaPhraserPlusPhrase
 
 
 @pytest.fixture

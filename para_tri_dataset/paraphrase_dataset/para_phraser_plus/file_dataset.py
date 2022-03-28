@@ -5,11 +5,11 @@
 import json
 import os
 import zipfile
-from dataclasses import dataclass
 from typing import Tuple, TypedDict, List, Dict, Generator, Any, Sequence
 
-from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
+from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset
 from para_tri_dataset.config import Config
+from para_tri_dataset.paraphrase_dataset.para_phraser_plus.base import ParaPhraserPlusPhrase
 
 
 class SerializedRecordType(TypedDict):
@@ -19,12 +19,6 @@ class SerializedRecordType(TypedDict):
 
 
 SerializedDatasetType = Dict[str, SerializedRecordType]
-
-
-@dataclass
-class ParaPhraserPlusPhrase(Phrase):
-    id: int
-    text: str
 
 
 def parse_json_dataset(
@@ -116,7 +110,7 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
 
         return tuple(self.get_phrase_by_id(p_id) for p_id in paraphrases_ids)
 
-    def get_paraphrases_id(self, phrase_id: Any) -> Sequence[int]:
+    def get_paraphrases_id(self, phrase_id: int) -> Sequence[int]:
         """Возвращает id фраз, которые являются парафразами данного"""
         try:
             return self.phrases_relations[phrase_id]
