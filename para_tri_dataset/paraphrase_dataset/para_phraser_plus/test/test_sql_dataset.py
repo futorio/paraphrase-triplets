@@ -14,11 +14,11 @@ from para_tri_dataset.paraphrase_dataset.para_phraser_plus.alchemy_models import
 @pytest.fixture
 def phrases():
     return [
-            ParaPhraserPlusPhrase(id=0, text="foo"),
-            ParaPhraserPlusPhrase(id=1, text="baz"),
-            ParaPhraserPlusPhrase(id=2, text="bar"),
-            ParaPhraserPlusPhrase(id=3, text="biz"),
-        ]
+        ParaPhraserPlusPhrase(id=0, text="foo"),
+        ParaPhraserPlusPhrase(id=1, text="baz"),
+        ParaPhraserPlusPhrase(id=2, text="bar"),
+        ParaPhraserPlusPhrase(id=3, text="biz"),
+    ]
 
 
 @pytest.fixture
