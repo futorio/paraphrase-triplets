@@ -78,26 +78,26 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
 
             return [r.id for r in rows]
 
-    def iterate_phrases_id(self, start_offset: int = 0) -> Generator[int, None, None]:
-        offset = start_offset
+    def iterate_phrases_id(self, offset: int = 0) -> Generator[int, None, None]:
+        current_offset = offset
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id]
-                rows = self._scroll_rows(session, offset, fields).all()
+                rows = self._scroll_rows(session, current_offset, fields).all()
 
                 yield from (row.id for i, row in enumerate(rows, start=1) if i < self.scroll_size + 1)
 
                 if self.scroll_size + 1 > len(rows):
                     break
 
-                offset += self.scroll_size
+                current_offset += self.scroll_size
 
-    def iterate_phrases(self, start_offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
-        offset = start_offset
+    def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
+        current_offset = offset
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.text]
-                rows = self._scroll_rows(session, offset, fields).all()
+                rows = self._scroll_rows(session, current_offset, fields).all()
 
                 for row in rows[: self.scroll_size]:
                     yield ParaPhraserPlusPhrase(id=row.id, text=row.text)
@@ -105,4 +105,4 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
                 if self.scroll_size + 1 > len(rows):
                     break
 
-                offset += self.scroll_size
+                current_offset += self.scroll_size
