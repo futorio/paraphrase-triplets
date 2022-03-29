@@ -45,16 +45,19 @@ def database(paraphrases) -> Database:
     return db
 
 
-def test_get_phrase_by_id(database, phrases):
-    dataset = ParaPhraserPlusSQLDataset(database)
+@pytest.fixture
+def dataset(database):
+    return ParaPhraserPlusSQLDataset(database)
+
+
+def test_get_phrase_by_id(dataset, phrases):
 
     for phrase in phrases:
         dataset_phrase = dataset.get_phrase_by_id(phrase.id)
         assert phrase == dataset_phrase
 
 
-def test_iterate_phrases(database, phrases):
-    dataset = ParaPhraserPlusSQLDataset(database)
+def test_iterate_phrases(dataset, phrases):
 
     for orig_phrase, dataset_phrase in zip(phrases, dataset.iterate_phrases()):
         assert orig_phrase == dataset_phrase
@@ -63,8 +66,7 @@ def test_iterate_phrases(database, phrases):
         assert orig_phrase == dataset_phrase
 
 
-def test_iterate_phrases_ids(database, phrases):
-    dataset = ParaPhraserPlusSQLDataset(database)
+def test_iterate_phrases_ids(dataset, phrases):
 
     for orig_phrase, phrase_id in zip(phrases, dataset.iterate_phrases_id()):
         assert orig_phrase.id == phrase_id
@@ -73,8 +75,7 @@ def test_iterate_phrases_ids(database, phrases):
         assert orig_phrase.id == phrase_id
 
 
-def test_get_paraphrases(database, paraphrases):
-    dataset = ParaPhraserPlusSQLDataset(database)
+def test_get_paraphrases(dataset, paraphrases):
 
     for phrases in paraphrases:
         for i in range(len(phrases)):
@@ -84,8 +85,7 @@ def test_get_paraphrases(database, paraphrases):
             assert phrase_paraphrases == dataset_paraphrases
 
 
-def test_get_paraphrases_id(database, paraphrases):
-    dataset = ParaPhraserPlusSQLDataset(database)
+def test_get_paraphrases_id(dataset, paraphrases):
 
     for phrases in paraphrases:
         for i in range(len(phrases)):
