@@ -43,7 +43,7 @@ def create_database(db: Database, dataset_paraphrases):
 
 @pytest.fixture
 def dataset_config(tmp_path, paraphrases):
-    dataset_filepath = tmp_path / 'test-paraphraser-plus.sqlite'
+    dataset_filepath = tmp_path / "test-paraphraser-plus.sqlite"
     db_url = f"sqlite:///{dataset_filepath.absolute()}"
 
     engine = create_engine(db_url)
@@ -52,7 +52,7 @@ def dataset_config(tmp_path, paraphrases):
     db = Database(engine, Session)
     create_database(db, paraphrases)
 
-    cfg = Config(name="paraphrase_plus_sql", data={'db_url': db_url}, nested_configs=[])
+    cfg = Config(name="paraphrase_plus_sql", data={"db_url": db_url}, nested_configs=[])
     yield cfg
 
     dataset_filepath.unlink()
