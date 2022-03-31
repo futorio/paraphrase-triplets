@@ -90,10 +90,34 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
         return len(self.phrases)
 
     def iterate_phrases_id(self, offset: int = 0) -> Generator[int, None, None]:
-        yield from (p.id for p in self.phrases)
+        for idx in range(offset, len(self.phrases)):
+            yield idx
 
     def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
-        yield from self.phrases[offset:]
+        for phrase_idx in self.iterate_phrases_id(offset):
+            yield self.phrases[phrase_idx]
+
+    def iterate_paraphrases_id(self, offset: int = 0) -> Generator[Tuple[int, ...], None, None]:
+
+        group_idx, visited_idx = 0, set()
+        for r_idx, r in enumerate(self.phrases_relations):
+            if r_idx in visited_idx:
+                continue
+
+            if offset > group_idx:
+                continue
+
+            yield r_idx, *r
+
+            group_idx += 1
+            visited_idx.update(set(r))
+
+    def iterate_paraphrases(self, offset: int = 0) -> Generator[Tuple[ParaPhraserPlusPhrase, ...], None, None]:
+
+        for phrases_idx in self.iterate_paraphrases_id(offset):
+            phrases = tuple(self.get_phrase_by_id(p_id) for p_id in phrases_idx)
+
+            yield phrases
 
     def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
         try:

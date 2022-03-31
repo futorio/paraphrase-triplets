@@ -44,6 +44,14 @@ class ParaphraseDataset(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def iterate_paraphrases_id(self, offset: int = 0) -> Generator[Sequence[Any], None, None]:
+        pass
+
+    @abc.abstractmethod
+    def iterate_paraphrases(self, offset: int = 0) -> Generator[Sequence[Phrase], None, None]:
+        pass
+
+    @abc.abstractmethod
     def get_phrase_by_id(self, phrase_id: Any) -> Phrase:
         pass
 

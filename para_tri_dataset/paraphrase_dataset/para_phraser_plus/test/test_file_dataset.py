@@ -84,6 +84,26 @@ def test_iterate_phrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b
     )
 
 
+def test_iterate_paraphrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    paraphrases_groups = list(dataset.iterate_paraphrases())
+
+    assert len(paraphrases_groups) == 1
+
+    paraphrases = paraphrases_groups[0]
+    assert phrase_a in paraphrases
+    assert phrase_b in paraphrases
+
+
+def test_iterate_paraphrases_id(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    paraphrases_ids_groups = list(dataset.iterate_paraphrases_id())
+
+    assert len(paraphrases_ids_groups) == 1
+
+    paraphrases_ids = paraphrases_ids_groups[0]
+    assert phrase_a.id in paraphrases_ids
+    assert phrase_b.id in paraphrases_ids
+
+
 def test_get_paraphrases(
     dataset: ParaPhraserPlusFileDataset, phrase_a: ParaPhraserPlusPhrase, phrase_b: ParaPhraserPlusPhrase
 ):
