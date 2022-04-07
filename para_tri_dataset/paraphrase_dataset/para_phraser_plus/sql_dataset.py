@@ -30,8 +30,8 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
         with self.storage_db.session_scope() as session:
             return session.query(ParaphraserPlusDataset).count()
 
-    def _scroll_rows(self, session, offset: int, fields) -> Query:
-        return session.query(*fields).order_by(ParaphraserPlusDataset.id).limit(self.scroll_size + 1).offset(offset)
+    def _scroll_rows(self, session, offset: int, fields, order_by: list) -> Query:
+        return session.query(*fields).order_by(*order_by).limit(self.scroll_size + 1).offset(offset)
 
     def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
         with self.storage_db.session_scope() as session:
@@ -83,26 +83,80 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id]
-                rows = self._scroll_rows(session, current_offset, fields).all()
+                rows = self._scroll_rows(session, current_offset, fields, order_by=[ParaphraserPlusDataset.id]).all()
 
-                yield from (row.id for i, row in enumerate(rows, start=1) if i < self.scroll_size + 1)
+            yield from (row.id for i, row in enumerate(rows, start=1) if i < self.scroll_size + 1)
 
-                if self.scroll_size + 1 > len(rows):
-                    break
+            if self.scroll_size + 1 > len(rows):
+                break
 
-                current_offset += self.scroll_size
+            current_offset += self.scroll_size
 
     def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
         current_offset = offset
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.text]
-                rows = self._scroll_rows(session, current_offset, fields).all()
+                rows = self._scroll_rows(session, current_offset, fields, order_by=[ParaphraserPlusDataset.id]).all()
 
-                for row in rows[: self.scroll_size]:
-                    yield ParaPhraserPlusPhrase(id=row.id, text=row.text)
+            for row in rows[: self.scroll_size]:
+                yield ParaPhraserPlusPhrase(id=row.id, text=row.text)
 
-                if self.scroll_size + 1 > len(rows):
-                    break
+            if self.scroll_size + 1 > len(rows):
+                break
 
-                current_offset += self.scroll_size
+            current_offset += self.scroll_size
+
+    def iterate_paraphrases_id(self, offset: int = 0) -> Generator[Sequence[int], None, None]:
+        phrase_offset, paraphrases_offset = 0, offset
+        total_paraphrases_groups = 0
+
+        paraphrases_id = []
+        while True:
+            with self.storage_db.session_scope() as session:
+                fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]
+                rows = self._scroll_rows(session, phrase_offset, fields,
+                                         order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]).all()
+
+            for row in rows[: self.scroll_size]:
+                if len(paraphrases_id) == 0 or row.group_id == paraphrases_id[0].group_id:
+                    paraphrases_id.append(row)
+                    continue
+
+                if total_paraphrases_groups >= paraphrases_offset:
+                    yield [r.id for r in paraphrases_id]
+
+                total_paraphrases_groups += 1
+                paraphrases_id = []
+
+            if self.scroll_size + 1 > len(rows):
+                break
+
+            phrase_offset += self.scroll_size
+
+    def iterate_paraphrases(self, offset: int = 0) -> Generator[Sequence[ParaPhraserPlusPhrase], None, None]:
+        phrase_offset, paraphrases_offset = 0, offset
+        total_paraphrases_groups = 0
+
+        paraphrases = []
+        while True:
+            with self.storage_db.session_scope() as session:
+                fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.text, ParaphraserPlusDataset.group_id]
+                rows = self._scroll_rows(session, phrase_offset, fields,
+                                         order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]).all()
+
+            for row in rows[: self.scroll_size]:
+                if len(paraphrases) == 0 or row.group_id == paraphrases[0].group_id:
+                    paraphrases.append(row)
+                    continue
+
+                if total_paraphrases_groups >= paraphrases_offset:
+                    yield [ParaPhraserPlusPhrase(r.id, r.text) for r in paraphrases]
+
+                total_paraphrases_groups += 1
+                paraphrases = []
+
+            if self.scroll_size + 1 > len(rows):
+                break
+
+            phrase_offset += self.scroll_size
