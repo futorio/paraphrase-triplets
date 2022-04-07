@@ -115,8 +115,12 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]
-                rows = self._scroll_rows(session, phrase_offset, fields,
-                                         order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]).all()
+                rows = self._scroll_rows(
+                    session,
+                    phrase_offset,
+                    fields,
+                    order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id],
+                ).all()
 
             for row in rows[: self.scroll_size]:
                 if len(paraphrases_id) == 0 or row.group_id == paraphrases_id[0].group_id:
@@ -142,8 +146,12 @@ class ParaPhraserPlusSQLDataset(ParaphraseDataset):
         while True:
             with self.storage_db.session_scope() as session:
                 fields = [ParaphraserPlusDataset.id, ParaphraserPlusDataset.text, ParaphraserPlusDataset.group_id]
-                rows = self._scroll_rows(session, phrase_offset, fields,
-                                         order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id]).all()
+                rows = self._scroll_rows(
+                    session,
+                    phrase_offset,
+                    fields,
+                    order_by=[ParaphraserPlusDataset.id, ParaphraserPlusDataset.group_id],
+                ).all()
 
             for row in rows[: self.scroll_size]:
                 if len(paraphrases) == 0 or row.group_id == paraphrases[0].group_id:
