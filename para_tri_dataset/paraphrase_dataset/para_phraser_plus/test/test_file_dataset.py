@@ -4,8 +4,8 @@ import pytest
 
 from para_tri_dataset.paraphrase_dataset.para_phraser_plus.file_dataset import (
     ParaPhraserPlusFileDataset,
-    ParaPhraserPlusPhrase,
 )
+from para_tri_dataset.paraphrase_dataset.para_phraser_plus.base import ParaPhraserPlusPhrase
 
 
 @pytest.fixture
@@ -82,6 +82,26 @@ def test_iterate_phrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b
         0,
         1,
     )
+
+
+def test_iterate_paraphrases(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    paraphrases_groups = list(dataset.iterate_paraphrases())
+
+    assert len(paraphrases_groups) == 1
+
+    paraphrases = paraphrases_groups[0]
+    assert phrase_a in paraphrases
+    assert phrase_b in paraphrases
+
+
+def test_iterate_paraphrases_id(dataset: ParaPhraserPlusFileDataset, phrase_a, phrase_b):
+    paraphrases_ids_groups = list(dataset.iterate_paraphrases_id())
+
+    assert len(paraphrases_ids_groups) == 1
+
+    paraphrases_ids = paraphrases_ids_groups[0]
+    assert phrase_a.id in paraphrases_ids
+    assert phrase_b.id in paraphrases_ids
 
 
 def test_get_paraphrases(

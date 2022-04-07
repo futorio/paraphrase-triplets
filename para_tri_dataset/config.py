@@ -66,7 +66,7 @@ def create_config(base_path: Path, config_name: str, depth: int = 0, type_: str 
     if "__val_schema__" not in raw_config_data:
         raise ValueError(f'config file {config_filepath} does not contain validation schema "__val_schema__"')
 
-    validator = Validator(raw_config_data["__val_schema__"], reqire_all=True)
+    validator = Validator(raw_config_data["__val_schema__"])
     if not validator(config_data):
         raise ValueError(validator.errors)
 

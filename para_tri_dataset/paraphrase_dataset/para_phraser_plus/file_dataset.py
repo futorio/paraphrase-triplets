@@ -5,11 +5,11 @@
 import json
 import os
 import zipfile
-from dataclasses import dataclass
-from typing import Tuple, TypedDict, List, Dict, Generator, Any, Sequence
+from typing import Tuple, TypedDict, List, Dict, Generator, Sequence
 
-from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset, Phrase
+from para_tri_dataset.paraphrase_dataset.base import ParaphraseDataset
 from para_tri_dataset.config import Config
+from para_tri_dataset.paraphrase_dataset.para_phraser_plus.base import ParaPhraserPlusPhrase
 
 
 class SerializedRecordType(TypedDict):
@@ -19,12 +19,6 @@ class SerializedRecordType(TypedDict):
 
 
 SerializedDatasetType = Dict[str, SerializedRecordType]
-
-
-@dataclass
-class ParaPhraserPlusPhrase(Phrase):
-    id: int
-    text: str
 
 
 def parse_json_dataset(
@@ -96,10 +90,34 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
         return len(self.phrases)
 
     def iterate_phrases_id(self, offset: int = 0) -> Generator[int, None, None]:
-        yield from (p.id for p in self.phrases)
+        for idx in range(offset, len(self.phrases)):
+            yield idx
 
     def iterate_phrases(self, offset: int = 0) -> Generator[ParaPhraserPlusPhrase, None, None]:
-        yield from self.phrases[offset:]
+        for phrase_idx in self.iterate_phrases_id(offset):
+            yield self.phrases[phrase_idx]
+
+    def iterate_paraphrases_id(self, offset: int = 0) -> Generator[Tuple[int, ...], None, None]:
+
+        group_idx, visited_idx = 0, set()
+        for r_idx, r in enumerate(self.phrases_relations):
+            if r_idx in visited_idx:
+                continue
+
+            if offset > group_idx:
+                continue
+
+            yield r_idx, *r
+
+            group_idx += 1
+            visited_idx.update(set(r))
+
+    def iterate_paraphrases(self, offset: int = 0) -> Generator[Tuple[ParaPhraserPlusPhrase, ...], None, None]:
+
+        for phrases_idx in self.iterate_paraphrases_id(offset):
+            phrases = tuple(self.get_phrase_by_id(p_id) for p_id in phrases_idx)
+
+            yield phrases
 
     def get_phrase_by_id(self, phrase_id: int) -> ParaPhraserPlusPhrase:
         try:
@@ -116,7 +134,7 @@ class ParaPhraserPlusFileDataset(ParaphraseDataset):
 
         return tuple(self.get_phrase_by_id(p_id) for p_id in paraphrases_ids)
 
-    def get_paraphrases_id(self, phrase_id: Any) -> Sequence[int]:
+    def get_paraphrases_id(self, phrase_id: int) -> Sequence[int]:
         """Возвращает id фраз, которые являются парафразами данного"""
         try:
             return self.phrases_relations[phrase_id]
